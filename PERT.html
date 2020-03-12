@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>ADE - Étude d'un problème lié à la Gestion de Projet</title>
+    <meta charset="UTF-8" />
+    <!-- jQuery Script -->
+    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script> 
+    <script src="//cdn.syncfusion.com/js/assets/external/jquery.easing.1.3.min.js"> </script> 
+    <script src="//cdn.syncfusion.com/js/assets/external/jquery.globalize.min.js"></script>
+    <script src="//cdn.syncfusion.com/js/assets/external/jsrender.min.js"></script>
+    <script src="//cdn.syncfusion.com/14.3.0.49/js/web/ej.web.all.min.js"> </script>
+    
+    <style type="text/css">
+        table, td, th {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        table tr:nth-child(even) {
+            background-color: white;
+        }
+        table tr:nth-child(odd) {
+            background-color: #85f7f3;
+        }
+        .critique table, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        .critique table tr:nth-child(even) {
+            background-color: pink;
+        }
+        .critique table tr:nth-child(odd) {
+            background-color: red;
+        }
+        .critique { stroke: red; }
+        .tableau table, .tableau td, .tableau th { 
+            padding: 5px;
+            text-align: center;
+            background-color: white;
+        }
+        .tableau th {
+            background-color: #85f7f3;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>En utilisant l'exemple du cours, afficher l'ensemble des dates ci-dessus décrites ainsi que les tâches associés à un chemin critique</h3>
+
+    <div id="tableau"></div>
+    
+    <h3>Dresser (afficher) le graphe PERT par étape : </h3>
+    
+    <h4>(a) Construction du graphe initial</h4>
+    <div id="diagram1"></div>
+
+    <h4>(b) Construction du graphe après le calcul des dates au plus tôt</h4>
+    <div id="diagram2"></div>
+
+    <h4>(c) Construction du graphe après le calcul des dates au plus tard</h4>
+    <div id="diagram3"></div>
+
+    <h4>(d) Affichage du chemin critique sur le graphe</h4>
+    <div id="diagram4"></div>
+
+    <script id="htmlTemplate" type="text/x-jsrender">
+        <table style="width:100%;height:100%;border-radius:100px;">
+            <tr align="center">
+                <td colspan="2">{{:Tache}}</td>
+            </tr>
+            <tr align="center">
+                <td width="50%">{{:asap}}</td>
+                <td width="50%">{{:alap}}</td>
+            </tr>
+        </table>
+    </script>
+
+    <script type="text/javascript">
+        function ASAP(data) {
+            var max_pred, val_pred, duree_pred;
+
+            for(var i=0; i<data.length; i++) {
+                data[i]["asap"] = -1;
+            }
+
+            data[0]["asap"] = 0;
+
+            for(var i=1; i<data.length; i++) {
+                max_pred = -1;
+                for(var j=0; j<data[i]["Pred"].length; j++) {
+                    val_pred = data[data[i]["Pred"][j]["node"]-1]["asap"];
+                    if(max_pred < val_pred) {
+                        max_pred = val_pred;
+                        duree_pred = data[i]["Pred"][j]["duree"];
+                    }
+                }
+                data[i]["asap"] = max_pred + duree_pred;
+            }
+
+            return data;
+        }
+
+        function ALAP(data) {
+            var min_succ, val_succ, duree_succ;
+
+            for(var i=0; i<data.length; i++) {
+                data[i]["alap"] = Infinity;
+            }
+
+            data[data.length-1]["alap"] = data[data.length-1]["asap"];
+
+            for(var i=data.length-2; i>=0; i--) {
+                min_succ = Infinity;
+                for(var j=0; j<data[i]["Succ"].length; j++) {
+                    val_succ = data[data[i]["Succ"][j]["node"]-1]["alap"];
+                    if(min_succ > val_succ - data[i]["Succ"][j]["duree"]) {
+                        min_succ = val_succ - data[i]["Succ"][j]["duree"];
+                    }
+                }
+                data[i]["alap"] = min_succ;
+            }
+
+            return data;
+        }
+
+        function afficher_tableau(data) {
+            var div = document.getElementById('tableau');
+            var result = '';
+            
+            result += '<table class="tableau">';
+            result += '<tr><th>Tâche</th><th>Durée</th><th>Date au plus tôt</th><th>Date au plus tard</th><th>Marge totale</th><th>Tâche critique</th><th>Chemin critique</th><th>Sous-graphe critique</th><th>Marge libre</th></tr>';
+            for(var i=0; i<data.length; i++) {
+                result += '<tr>';
+                result += '<td>' + data[i]["name"] + '</td>';
+                result += '<td>' + data[i]["duree"] + '</td>';
+                result += '<td>' + data[i]["date_au_plus_tot"] + '</td>';
+                result += '<td>' + data[i]["date_au_plus_tard"] + '</td>';
+                result += '<td>' + data[i]["marge_totale"] + '</td>';
+                result += '<td>' + data[i]["tache_critique"] + '</td>';
+                result += '<td>' + data[i]["chemin_critique"] + '</td>';
+                result += '<td>' + data[i]["sousgraphe_critique"] + '</td>';
+                result += '<td>' + data[i]["marge_libre"] + '</td>';
+                result += '</tr>';
+            }
+            result += '</table>';
+
+            /* result.concat('<table>');
+            result.concat('<tr><th>Tâche</th><th>Durée</th><th>Date au plus tôt</th><th>Date au plus tard</th><th>Marge totale</th></tr>');
+            result.concat('</table>');
+            */
+
+            div.innerHTML += result;
+        }
+    </script>
+
+    <script type="text/javascript">
+
+        var nodes = [
+        {name: "1", "Tache": "1", "asap": "-", "alap": "-", offsetX: 100, offsetY: 300, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "2", "Tache": "2", "asap": "-", "alap": "-", offsetX: 350, offsetY: 100, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "3", "Tache": "3", "asap": "-", "alap": "-", offsetX: 350, offsetY: 300, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "4", "Tache": "4", "asap": "-", "alap": "-", offsetX: 350, offsetY: 400, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "5", "Tache": "5", "asap": "-", "alap": "-", offsetX: 600, offsetY: 200, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "6", "Tache": "6", "asap": "-", "alap": "-", offsetX: 600, offsetY: 400, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "7", "Tache": "7", "asap": "-", "alap": "-", offsetX: 850, offsetY: 200, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "8", "Tache": "8", "asap": "-", "alap": "-", offsetX: 850, offsetY: 400, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "9", "Tache": "9", "asap": "-", "alap": "-", offsetX: 1100, offsetY: 300, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        {name: "10", "Tache": "10", "asap": "-", "alap": "-", offsetX: 1350, offsetY: 300, templateId: 'htmlTemplate', type: ej.datavisualization.Diagram.Shapes.Html},  
+        ];
+
+        var connectors = [
+        { name: "A", duree: 4, sourceNode: "1", targetNode: "2", labels: [{ text: " A(4) " }], segments: [{length: 25,direction: "right"}]}, 
+        { name: "B", duree: 8, sourceNode: "1", targetNode: "3", labels: [{ text: " B(8) " }]}, 
+        { name: "C", duree: 1, sourceNode: "1", targetNode: "4", labels: [{ text: " C(1) " }], segments: [{length: 25,direction: "right"}]}, 
+        { name: "D", duree: 1, sourceNode: "4", targetNode: "6", labels: [{ text: " D(1) " }]}, 
+        { name: "E", duree: 6, sourceNode: "2", targetNode: "5", labels: [{ text: " E(6) " }], segments: [{length: 50,direction: "right"}]}, 
+        { name: "F", duree: 3, sourceNode: "2", targetNode: "5", labels: [{ text: " F(3) " }], segments: [{length: 75,direction: "right"}]}, 
+        { name: "G", duree: 5, sourceNode: "3", targetNode: "5", labels: [{ text: " G(5) " }], segments: [{length: 25,direction: "right"}]}, 
+        { name: "H", duree: 3, sourceNode: "5", targetNode: "7", labels: [{ text: " H(3) " }]}, 
+        { name: "I", duree: 1, sourceNode: "6", targetNode: "8", labels: [{ text: " I(1) " }]}, 
+        { name: "J", duree: 2, sourceNode: "8", targetNode: "9", labels: [{ text: " J(2) " }], segments: [{length: 25,direction: "right"}]}, 
+        { name: "K", duree: 2, sourceNode: "7", targetNode: "9", labels: [{ text: " K(2) " }], segments: [{length: 25,direction: "right"}]}, 
+        { name: "L", duree: 5, sourceNode: "9", targetNode: "10", labels: [{ text: " L(5) " }]}
+        ];
+
+        for(var i=0; i<nodes.length; i++) {
+            nodes[i]["Pred"] = new Array();
+            nodes[i]["Succ"] = new Array();
+            for(var j=0; j<connectors.length; j++)
+            {
+                if(connectors[j]["sourceNode"] == nodes[i]["name"])
+                    nodes[i]["Succ"].push({node: connectors[j]["targetNode"], duree: connectors[j]["duree"]});
+                if(connectors[j]["targetNode"] == nodes[i]["name"])
+                    nodes[i]["Pred"].push({node: connectors[j]["sourceNode"], duree: connectors[j]["duree"]});
+            }
+            console.log(nodes[i]["Succ"]);
+        }
+
+        
+
+        /* CONSTRUCTION DU GRAPHE INITIAL */
+
+        $("#diagram1").ejDiagram({
+            width: "100%",
+            height: "500px",
+            nodes: nodes,
+            connectors: connectors,
+
+            defaultSettings: {
+                node: { width: 140, height: 50 },
+                connector: { labels: [{ "fillColor": "white" }], segments: [{ type: "orthogonal" }] },
+            }
+        });
+
+
+
+        /* CONSTRUCTION DU GRAPHE APRÈS LE CALCUL DES DATES AU PLUS TÔT */
+
+        nodes = ASAP(nodes);
+
+        $("#diagram2").ejDiagram({
+            width: "100%",
+            height: "500px",
+            nodes: nodes,
+            connectors: connectors,
+
+            defaultSettings: {
+                node: { width: 140, height: 50 },
+                connector: { labels: [{ "fillColor": "white" }], segments: [{ type: "orthogonal" }] },
+            }
+        });
+
+
+
+        /* CONSTRUCTION DU GRAPHE APRÈS LE CALCUL DES DATES AU PLUS TARD */
+
+        nodes = ALAP(nodes);
+
+        $("#diagram3").ejDiagram({
+            width: "100%",
+            height: "500px",
+            nodes: nodes,
+            connectors: connectors,
+
+            defaultSettings: {
+                node: { width: 140, height: 50 },
+                connector: { labels: [{ "fillColor": "white" }], segments: [{ type: "orthogonal" }] },
+            }
+        });
+
+
+
+        /* AFFICHAGE DU CHEMIN CRITIQUE SUR LE GRAPHE */
+
+        for(var i=0; i<nodes.length; i++) {
+            if(nodes[i]["asap"] == nodes[i]["alap"]) {
+                nodes[i]["cssClass"] = "critique";
+            }
+        }
+        for(var i=0; i<connectors.length; i++) {
+            if(nodes[connectors[i]["sourceNode"]-1]["cssClass"] == "critique" && nodes[connectors[i]["targetNode"]-1]["cssClass"] == "critique") {
+                connectors[i]["cssClass"] = "critique";
+            }
+        }
+        
+        $("#diagram4").ejDiagram({
+            width: "100%",
+            height: "500px",
+            nodes: nodes,
+            connectors: connectors,
+
+            defaultSettings: {
+                node: { width: 140, height: 50 },
+                connector: { labels: [{ "fillColor": "white" }], segments: [{ type: "orthogonal" }] },
+            }
+        });
+
+
+
+        /* AFFICHAGE DES DATES */
+
+        for(var i=0; i<connectors.length; i++) {
+
+            // Date au plus tôt
+            connectors[i]["date_au_plus_tot"] = nodes[connectors[i]["sourceNode"]-1]["asap"];
+
+            // Date au plus tard
+            connectors[i]["date_au_plus_tard"] = nodes[connectors[i]["sourceNode"]-1]["alap"];
+
+            // Marge totale
+            connectors[i]["marge_totale"] = nodes[connectors[i]["targetNode"]-1]["alap"] - nodes[connectors[i]["sourceNode"]-1]["asap"] - connectors[i]["duree"];
+
+            // Tâche critique
+            if(connectors[i]["marge_totale"] == 0)
+                connectors[i]["tache_critique"] = connectors[i]["name"];
+            else
+                connectors[i]["tache_critique"] = "-";
+
+            // Chemin critique
+            if(connectors[i]["tache_critique"] != "-")
+                connectors[i]["chemin_critique"] = connectors[i]["name"];
+            else
+                connectors[i]["chemin_critique"] = "-";
+
+            // Sous-graphe critique
+            if(connectors[i]["tache_critique"] != "-" && connectors[i]["chemin_critique"] != "-")
+                if(nodes[connectors[i]["targetNode"]-1]["alap"] - nodes[connectors[i]["sourceNode"]-1]["asap"] - connectors[i]["duree"] == 0)
+                    connectors[i]["sousgraphe_critique"] = connectors[i]["name"];
+                else
+                    connectors[i]["sousgraphe_critique"] = "-";
+            else
+                connectors[i]["sousgraphe_critique"] = "-";
+
+            // Marge libre
+            connectors[i]["marge_libre"] = nodes[connectors[i]["targetNode"]-1]["asap"] - connectors[i]["duree"] - nodes[connectors[i]["sourceNode"]-1]["asap"];
+        }
+        afficher_tableau(connectors);
+
+
+
+    </script>
+</body>
+
+</html>
