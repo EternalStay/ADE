@@ -4,7 +4,7 @@
 
 UPJV - Master 1 MIAGE : UE Analyse et Décision en Entreprise (ADE)
 
-## Sous-problèmes
+## Parties
 
 Le projet était composé de deux parties :  
 
@@ -27,9 +27,9 @@ Ce qu'il est requis pour lancer le projet :
 
 Les étapes pour ouvrir le programme : 
 
-_Étape 1_: Démarrer le serveur web (se fait par défaut selon sa configuration)
-_Étape 2_: Ouvrir un navigateur et accéder à ``localhost/`` ou ``http://127.0.0.1/``
-_Étape 3_: Accéder à l'archive du projet et ouvrir ``index.php``
+- _Étape 1_: Démarrer le serveur web (se fait par défaut selon sa configuration)
+- _Étape 2_: Ouvrir un navigateur et accéder à ``localhost/`` ou ``http://127.0.0.1/``
+- _Étape 3_: Accéder à l'archive du projet et ouvrir ``index.php``
 
 ## Démarrage
 
@@ -75,4 +75,4 @@ Liste des versions : [Cliquer pour afficher](https://github.com/EternalStay/ADE/
 * **Rose Maxime** _alias_ [@maximerose](https://github.com/maximerose)
 * **Volff Lorris** _alias_ [@EternalStay](https://github.com/EternalStay)
 
-Lisez la liste des [contributeurs](https://github.com/EternalStay/ADE/contributors) pour voir qui à aidé au projet !
+Lisez la liste des [contributeurs](https://github.com/EternalStay/ADE/contributors) pour voir qui a aidé au projet !
