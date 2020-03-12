@@ -41,6 +41,12 @@
         .tableau th {
             background-color: #85f7f3;
         }
+        .diagramme {
+            overflow-x: auto!important;
+        }
+        .mainview_svg {
+            position: unset!important;
+        }
     </style>
 </head>
 
@@ -52,16 +58,16 @@
     <h3>Dresser (afficher) le graphe PERT par étape : </h3>
     
     <h4>(a) Construction du graphe initial</h4>
-    <div id="diagram1"></div>
+    <div id="diagram1" class="diagramme"></div>
 
     <h4>(b) Construction du graphe après le calcul des dates au plus tôt</h4>
-    <div id="diagram2"></div>
+    <div id="diagram2" class="diagramme"></div>
 
     <h4>(c) Construction du graphe après le calcul des dates au plus tard</h4>
-    <div id="diagram3"></div>
+    <div id="diagram3" class="diagramme"></div>
 
     <h4>(d) Affichage du chemin critique sur le graphe</h4>
-    <div id="diagram4"></div>
+    <div id="diagram4" class="diagramme"></div>
 
     <script id="htmlTemplate" type="text/x-jsrender">
         <table style="width:100%;height:100%;border-radius:100px;">
